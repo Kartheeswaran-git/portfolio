@@ -19,6 +19,20 @@ const TechnicalExplorations = () => {
 
   const [activeExploration, setActiveExploration] = useState(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
+
+  const totalPages = Math.ceil((technicalExplorations?.length || 0) / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentExplorations = technicalExplorations?.slice(startIndex, startIndex + itemsPerPage) || [];
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    const section = document.getElementById("explorations-section");
+    if (section) {
+      section.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   const handleOpenExploration = (exploration) => {
     setActiveExploration(exploration);
@@ -33,11 +47,11 @@ const TechnicalExplorations = () => {
 
   return (
     <>
-      <section className="section-card animate-slideUp">
+      <section id="explorations-section" className="section-card animate-slideUp">
         <h2 className="section-title">Technical Explorations</h2>
 
         <div className="projects-showroom">
-          {technicalExplorations.map((exploration, index) => {
+          {currentExplorations.map((exploration, index) => {
             const displayImages = normalizeImageList(
               exploration.images && exploration.images.length > 0
                 ? exploration.images
@@ -92,6 +106,21 @@ const TechnicalExplorations = () => {
             );
           })}
         </div>
+
+        {/* PAGINATION UI */}
+        {totalPages > 1 && (
+          <div className="pagination-container">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                className={`page-box ${currentPage === page ? "active" : ""}`}
+                onClick={() => handlePageChange(page)}
+              >
+                {page}
+              </button>
+            ))}
+          </div>
+        )}
       </section>
 
       {activeExploration && (

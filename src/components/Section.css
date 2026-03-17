@@ -98,18 +98,19 @@
 
 /* HERO SECTION */
 .about-hero {
-  height: 100vh;
+  min-height: 100vh;
   width: 100%;
   background: radial-gradient(circle at top, #ffffff 0%, #ffffff 65%);
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  overflow-x: hidden;
+  padding: 4rem 1rem;
 }
 
 
 .about-hero-container {
-  width: 90%;
+  width: 100%;
   max-width: 1200px;
   display: grid;
   grid-template-columns: 1.2fr 1fr;
@@ -143,6 +144,7 @@
   line-height: 1.7;
   color: #000000;
   margin-bottom: 2rem;
+  font-size: 1.1rem;
 }
 
 /* BUTTON */
@@ -170,10 +172,9 @@
 
 .hero-img {
   width: 100%;
-  margin-left: 200px;
-  margin-bottom: 100px;
+  max-width: 500px;
   height: auto;
-
+  display: block;
 }
 
 /* ANIMATIONS */
@@ -211,17 +212,38 @@
 
 /* RESPONSIVE */
 @media (max-width: 900px) {
+  .about-hero {
+    height: auto;
+    padding: 6rem 1.5rem 3rem;
+  }
+
   .about-hero-container {
     grid-template-columns: 1fr;
     text-align: center;
+    gap: 2rem;
+  }
+
+  .hero-title {
+    font-size: 2.8rem;
+  }
+
+  .hero-role {
+    font-size: 1.5rem;
   }
 
   .hero-text {
-    margin: 0 auto 2rem;
+    margin: 0 auto 2.5rem;
+    font-size: 1rem;
+  }
+
+  .about-hero-right {
+    order: -1;
+    margin-bottom: 1rem;
   }
 
   .hero-img {
-    width: 240px;
+    width: 220px;
+    margin: 0 auto;
   }
 }
 
@@ -754,6 +776,9 @@
   .modal-floating-gallery { bottom: 1rem; }
   .modal-thumb-v2 { width: 8px; height: 8px; }
   .modal-body-v2 { padding: 1.5rem; }
+  .project-title-v2 { font-size: 1.5rem; }
+  .project-abstract-v2 { font-size: 1.1rem; padding-left: 1rem; }
+  .info-card { padding: 1.25rem; }
 }
 
 /* SKILLS GRID */
@@ -876,6 +901,26 @@
   }
 }
 
+@media (max-width: 480px) {
+  .hero-contact-grid {
+    grid-template-columns: 1fr;
+    max-width: 280px;
+  }
+  
+  .section-title {
+    font-size: 1.8rem;
+  }
+  
+  .skill-card {
+    padding: 1rem;
+    gap: 0.5rem;
+  }
+  
+  .skill-bar {
+    width: 10px;
+  }
+}
+
 /* SKILL CARD LAYOUT WITH ICON SQUARE */
 .skill-card {
   display: flex;
@@ -937,4 +982,54 @@
 .skill-bars {
   display: flex;
   gap: 0.3rem;
+}
+
+/* PAGINATION STYLES */
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 3rem;
+  padding-bottom: 2rem;
+}
+
+.page-box {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #e5e7eb;
+  background: #ffffff;
+  color: #0f172a;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 4px;
+}
+
+.page-box:hover {
+  border-color: #ff2c5a;
+  color: #ff2c5a;
+  transform: translateY(-2px);
+}
+
+.page-box.active {
+  background: #000000;
+  color: #ffffff;
+  border-color: #000000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+@media (max-width: 480px) {
+  .pagination-container {
+    gap: 0.5rem;
+  }
+  
+  .page-box {
+    width: 35px;
+    height: 35px;
+    font-size: 0.9rem;
+  }
 }

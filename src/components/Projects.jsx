@@ -12,6 +12,21 @@ const Projects = () => {
 
   const [activeProject, setActiveProject] = useState(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
+
+  const totalPages = Math.ceil((projects?.length || 0) / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentProjects = projects?.slice(startIndex, startIndex + itemsPerPage) || [];
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    // Scroll to the top of the projects section when page changes
+    const section = document.getElementById("projects-section");
+    if (section) {
+      section.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   const handleOpenProject = (project) => {
     setActiveProject(project);
@@ -27,11 +42,11 @@ const Projects = () => {
   return (
     <>
       {/* PROJECTS SECTION */}
-      <section className="section-card animate-slideUp">
+      <section id="projects-section" className="section-card animate-slideUp">
         <h2 className="section-title">Projects</h2>
 
         <div className="projects-showroom">
-          {projects.map((project, index) => {
+          {currentProjects.map((project, index) => {
             const displayImages = normalizeImageList(
               project.images && project.images.length > 0
                 ? project.images
@@ -81,6 +96,21 @@ const Projects = () => {
             );
           })}
         </div>
+
+        {/* PAGINATION UI */}
+        {totalPages > 1 && (
+          <div className="pagination-container">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                className={`page-box ${currentPage === page ? "active" : ""}`}
+                onClick={() => handlePageChange(page)}
+              >
+                {page}
+              </button>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* MODAL V2 */}
