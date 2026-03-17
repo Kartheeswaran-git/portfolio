@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useData } from '../contexts/DataContext';
-import { FaPlus, FaEdit, FaTrash, FaSignOutAlt, FaProjectDiagram, FaTools, FaUserTie, FaBars, FaTimes, FaCheckCircle, FaExclamationCircle, FaStar, FaLink, FaFlask } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaSignOutAlt, FaProjectDiagram, FaTools, FaUserTie, FaBars, FaTimes, FaCheckCircle, FaExclamationCircle, FaStar, FaLink, FaFlask, FaUpload, FaSpinner } from 'react-icons/fa';
 import './AdminPanel.css';
 import { normalizeImageUrl } from '../utils/imageLinks';
+import { compressImage } from '../utils/compression';
 
 const SCHEMAS = {
-  projects: ['title', 'abstract', 'description', 'longDescription', 'toolsUsed', 'images', 'tags', 'github', 'demo'],
-  technicalExplorations: ['title', 'abstract', 'description', 'longDescription', 'toolsUsed', 'images', 'tags', 'github', 'demo'],
+  projects: ['title', 'abstract', 'description', 'longDescription', 'toolsUsed', 'videoLink', 'images', 'tags', 'github', 'demo'],
+  technicalExplorations: ['title', 'abstract', 'description', 'longDescription', 'toolsUsed', 'videoLink', 'images', 'tags', 'github', 'demo'],
   skills: ['name', 'level', 'category'],
   roles: ['title', 'company', 'duration', 'description'],
   headlines: ['text'],
@@ -43,6 +44,8 @@ const AdminPanel = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notification, setNotification] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [uploadingStatus, setUploadingStatus] = useState({}); // Track progress per index
+  const [isDragActive, setIsDragActive] = useState(false);
 
   useEffect(() => {
     if (notification) {
@@ -132,6 +135,65 @@ const AdminPanel = () => {
       showNotification('success', 'Item deleted');
     } else {
       showNotification('error', 'Delete failed');
+    }
+  };
+
+  const handleFileUpload = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    // Process each file
+    const currentImages = editItem.images || [];
+    const newImages = [...currentImages];
+    const startIdx = newImages.length;
+
+    // Add placeholders for loading
+    files.forEach((_, i) => {
+      setUploadingStatus(prev => ({ ...prev, [startIdx + i]: 10 }));
+    });
+
+    try {
+      const uploadPromises = files.map(async (file, i) => {
+        const idx = startIdx + i;
+        try {
+          console.log(`Processing file ${idx}:`, file.name);
+          setUploadingStatus(prev => ({ ...prev, [idx]: 30 }));
+          
+          const base64String = await compressImage(file, { maxWidth: 1000, quality: 0.6 });
+          
+          setUploadingStatus(prev => ({ ...prev, [idx]: 100 }));
+          
+          // Clear status after brief delay
+          setTimeout(() => {
+            setUploadingStatus(prev => {
+              const newState = { ...prev };
+              delete newState[idx];
+              return newState;
+            });
+          }, 800);
+
+          return base64String;
+        } catch (err) {
+          console.error(`Error processing file ${idx}:`, err);
+          setUploadingStatus(prev => {
+            const newState = { ...prev };
+            delete newState[idx];
+            return newState;
+          });
+          return null;
+        }
+      });
+
+      const processedImages = await Promise.all(uploadPromises);
+      const validImages = processedImages.filter(img => img !== null);
+      
+      if (validImages.length > 0) {
+        setEditItem({ ...editItem, images: [...newImages, ...validImages] });
+        showNotification('success', `Added ${validImages.length} images successfully`);
+      }
+    } catch (error) {
+      console.error('Multi-upload failed:', error);
+      showNotification('error', 'Image processing failed');
     }
   };
 
@@ -329,56 +391,122 @@ const AdminPanel = () => {
                     {SCHEMAS[activeTab].map(key => {
                       if (key === 'images') {
                         return (
-                          <div key={key} className="md:col-span-2 space-y-3">
-                            <div className="flex items-center justify-between">
-                              <label className="text-sm font-bold text-slate-700">Gallery (Unlimited Images)</label>
+                          <div key={key} className="md:col-span-2 space-y-4">
+                            <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                              Image Gallery <span className="text-xs font-normal text-slate-400">(Upload or paste links)</span>
+                            </label>
+                            
+                            {/* Dropzone Area */}
+                            <div 
+                              className={`dropzone ${isDragActive ? 'active' : ''}`}
+                              onDragOver={(e) => { e.preventDefault(); setIsDragActive(true); }}
+                              onDragLeave={() => setIsDragActive(false)}
+                              onDrop={(e) => {
+                                e.preventDefault();
+                                setIsDragActive(false);
+                                handleFileUpload({ target: { files: e.dataTransfer.files } });
+                              }}
+                              onClick={() => document.getElementById('multi-upload-input').click()}
+                            >
+                              <input 
+                                type="file" 
+                                id="multi-upload-input" 
+                                className="hidden" 
+                                multiple 
+                                accept="image/*"
+                                onChange={handleFileUpload}
+                              />
+                              <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mb-1">
+                                <FaUpload className="text-xl" />
+                              </div>
+                              <p className="font-bold text-slate-700">Drop images here or click to upload</p>
+                              <p className="text-xs text-slate-400">Supports JPG, PNG, WEBP (Multiselect allowed)</p>
+                            </div>
+
+                            {/* Image Grid */}
+                            {(editItem.images && editItem.images.length > 0) && (
+                              <div className="image-grid">
+                                {editItem.images.map((img, i) => (
+                                  <div key={i} className="image-item group">
+                                    <img src={img} alt={`Gallery ${i}`} />
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const newImages = editItem.images.filter((_, idx) => idx !== i);
+                                        setEditItem({ ...editItem, images: newImages });
+                                      }}
+                                      className="image-delete-btn"
+                                      title="Remove image"
+                                    >
+                                      <FaTrash size={12} />
+                                    </button>
+                                    {uploadingStatus[i] !== undefined && (
+                                      <div className="upload-overlay">
+                                        <FaSpinner className="animate-spin text-indigo-600 mb-2" />
+                                        <div className="px-2 w-full">
+                                          <div className="progress-pill">
+                                            <div className="progress-fill" style={{ width: `${uploadingStatus[i]}%` }}></div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* URL Option Section */}
+                            <div className="space-y-3 pt-2">
                               <button
                                 type="button"
                                 onClick={() => {
                                   const currentImages = editItem.images || [];
                                   setEditItem({ ...editItem, images: [...currentImages, ''] });
                                 }}
-                                className="text-xs bg-indigo-50 text-indigo-600 px-3 py-1 rounded-lg font-bold hover:bg-indigo-100 transition-all flex items-center gap-1"
+                                className="text-xs bg-slate-100 text-slate-600 px-3 py-2 rounded-lg font-bold hover:bg-slate-200 transition-all flex items-center gap-1.5"
                               >
-                                <FaPlus /> Add More
+                                <FaLink className="text-xs" /> Add Manual URL
                               </button>
+
+                              {editItem.images && editItem.images.some(url => url.startsWith('http')) && (
+                                <div className="space-y-2">
+                                  {editItem.images.map((img, i) => img.startsWith('http') ? (
+                                    <div key={i} className="flex gap-2 animate-fadeIn">
+                                      <input
+                                        type="text"
+                                        value={img}
+                                        onChange={(e) => {
+                                          const newImages = [...editItem.images];
+                                          newImages[i] = normalizeImageUrl(e.target.value);
+                                          setEditItem({ ...editItem, images: newImages });
+                                        }}
+                                        className="flex-1 px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-sm"
+                                        placeholder="Paste image URL here..."
+                                      />
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const newImages = editItem.images.filter((_, idx) => idx !== i);
+                                          setEditItem({ ...editItem, images: newImages });
+                                        }}
+                                        className="p-2.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                                      >
+                                        <FaTrash size={14} />
+                                      </button>
+                                    </div>
+                                  ) : null)}
+                                </div>
+                              )}
                             </div>
-                            {(editItem.images && editItem.images.length > 0 ? editItem.images : ['']).map((img, i) => (
-                              <div key={i} className="flex gap-2 animate-fadeIn">
-                                <input
-                                  type="text"
-                                  value={img}
-                                  onChange={(e) => {
-                                    const newImages = [...(editItem.images && editItem.images.length > 0 ? editItem.images : [''])];
-                                    newImages[i] = normalizeImageUrl(e.target.value);
-                                    setEditItem({ ...editItem, images: newImages });
-                                  }}
-                                  className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all outline-none"
-                                  placeholder="Paste Image URL or Drive Link..."
-                                />
-                                {(editItem.images && editItem.images.length > 1) && (
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const newImages = editItem.images.filter((_, idx) => idx !== i);
-                                      setEditItem({ ...editItem, images: newImages });
-                                    }}
-                                    className="p-3 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
-                                  >
-                                    <FaTrash />
-                                  </button>
-                                )}
-                              </div>
-                            ))}
                           </div>
                         );
                       }
                       return (
-                        <div key={key} className={key === 'description' || key === 'longDescription' ? 'md:col-span-2' : ''}>
+                        <div key={key} className={['description', 'longDescription', 'videoLink'].includes(key) ? 'md:col-span-2' : ''}>
                           <label className="block text-sm font-bold text-slate-700 mb-2 capitalize">
                             {key.replace(/([A-Z])/g, ' $1')}
                           </label>
-                          {['description', 'longDescription', 'abstract', 'toolsUsed'].includes(key) ? (
+                          {['description', 'longDescription', 'abstract', 'toolsUsed', 'videoLink'].includes(key) ? (
                             <textarea
                               value={editItem[key] || ''}
                               onChange={(e) => setEditItem({ ...editItem, [key]: e.target.value })}

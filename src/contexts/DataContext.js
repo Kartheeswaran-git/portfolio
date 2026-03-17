@@ -105,6 +105,7 @@ export const DataProvider = ({ children }) => {
             setError(null);
             return { success: true };
         } catch (updateError) {
+            console.error('FULL FIRESTORE ERROR:', updateError); // Detailed log
             const message = getFriendlyError(updateError);
             setError(message);
             return { success: false, error: message };
