@@ -9,6 +9,7 @@ import {
 } from "react-icons/fa";
 import "./Section.css";
 import { normalizeImageList } from "../utils/imageLinks";
+import { normalizeVideoUrl } from "../utils/videoLinks";
 
 const hasContent = (value) =>
   typeof value === "string" ? value.trim().length > 0 : Boolean(value);
@@ -219,6 +220,29 @@ const TechnicalExplorations = () => {
                       <span className="info-card-label">Abstract</span>
                       <div className="modal-text-v2">
                         {activeExploration.abstract}
+                      </div>
+                    </div>
+                  )}
+
+                  {hasContent(activeExploration.videoLink) && (
+                    <div className="info-card">
+                      <span className="info-card-label">Watch Exploration</span>
+                      <div className="video-container">
+                        {activeExploration.videoLink.match(/\.(mp4|webm|ogg)$/i) ? (
+                          <video controls className="video-player">
+                            <source src={activeExploration.videoLink} type={`video/${activeExploration.videoLink.split('.').pop()}`} />
+                            Your browser does not support the video tag.
+                          </video>
+                        ) : (
+                          <iframe
+                            src={normalizeVideoUrl(activeExploration.videoLink)}
+                            title="Exploration Video"
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                            className="video-player"
+                          ></iframe>
+                        )}
                       </div>
                     </div>
                   )}

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { doc, onSnapshot, serverTimestamp, setDoc } from 'firebase/firestore';
-import { auth, db } from '../firebase';
+import { auth, db, isConfigValid } from '../firebase';
 
 const DataContext = createContext();
 const STORAGE_KEY = 'portfolio-admin-data';
@@ -46,6 +46,8 @@ export const DataProvider = ({ children }) => {
     const [authUser, setAuthUser] = useState(null);
 
     useEffect(() => {
+        if (!isConfigValid || !auth) return;
+        
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             setAuthUser(user);
             setIsAuthenticated(Boolean(user));
@@ -62,6 +64,11 @@ export const DataProvider = ({ children }) => {
             }
         } catch (storageError) {
             console.error('Failed to read cached portfolio data:', storageError);
+        }
+
+        if (!isConfigValid || !db) {
+            setLoading(false);
+            return;
         }
 
         const [collectionName, documentId] = PORTFOLIO_DOC;

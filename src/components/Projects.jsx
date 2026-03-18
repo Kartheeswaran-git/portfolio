@@ -3,6 +3,7 @@ import usePortfolioData from "../hooks/usePortfolioData";
 import { FaGithub, FaExternalLinkAlt, FaArrowRight, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import "./Section.css";
 import { normalizeImageList } from "../utils/imageLinks";
+import { normalizeVideoUrl } from "../utils/videoLinks";
 
 const hasContent = (value) => typeof value === "string" ? value.trim().length > 0 : Boolean(value);
 
@@ -198,6 +199,29 @@ const Projects = () => {
                   <div className="info-card">
                     <span className="info-card-label">Abstract</span>
                     <div className="modal-text-v2">{activeProject.abstract}</div>
+                  </div>
+                )}
+
+                {hasContent(activeProject.videoLink) && (
+                  <div className="info-card">
+                    <span className="info-card-label">Watch Demo</span>
+                    <div className="video-container">
+                      {activeProject.videoLink.match(/\.(mp4|webm|ogg)$/i) ? (
+                        <video controls className="video-player">
+                          <source src={activeProject.videoLink} type={`video/${activeProject.videoLink.split('.').pop()}`} />
+                          Your browser does not support the video tag.
+                        </video>
+                      ) : (
+                        <iframe
+                          src={normalizeVideoUrl(activeProject.videoLink)}
+                          title="Project Video"
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          className="video-player"
+                        ></iframe>
+                      )}
+                    </div>
                   </div>
                 )}
 
