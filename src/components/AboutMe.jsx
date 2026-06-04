@@ -58,7 +58,7 @@ const AboutMe = () => {
   return (
     <>
       {/* ================= HERO SECTION ================= */}
-      <section className="about-hero">
+      <section id="home-section" className="about-hero">
         <div className="about-hero-container">
           {/* LEFT */}
           <div className="about-hero-left animate-left">

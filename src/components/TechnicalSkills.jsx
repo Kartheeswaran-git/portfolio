@@ -6,32 +6,19 @@ const TechnicalSkills = () => {
   const { skills } = data;
 
   return (
-    <section className="section-card animate-slideUp">
+    <section id="skills-section" className="section-card animate-slideUp">
       <h2 className="section-title">Technical Skills</h2>
 
-      <div className="skills-grid">
+      <div className="skills-list">
         {skills.map((skill, index) => (
-          <div className="skill-card" key={index}>
-            {/* ICON */}
-            <div className="skill-icon">
+          <div className="skill-list-item" key={index}>
+            <div className="skill-list-icon">
               {skill.name ? skill.name.charAt(0) : "?"}
             </div>
 
-            {/* DETAILS */}
-            <div className="skill-details">
-              <div className="skill-title">{skill.name || "Unknown Skill"}</div>
-              <div className="skill-exp">{skill.exp || "N/A"}</div>
-
-              <div className="skill-bars">
-                {Array.from({ length: 10 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className={`skill-bar ${
-                      i < (skill.level || 0) ? "active" : ""
-                    }`}
-                  />
-                ))}
-              </div>
+            <div className="skill-list-content">
+              <div className="skill-list-title">{skill.name || "Unknown Skill"}</div>
+              {skill.exp && <div className="skill-list-meta">{skill.exp}</div>}
             </div>
           </div>
         ))}
