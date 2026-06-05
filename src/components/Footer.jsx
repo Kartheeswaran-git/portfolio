@@ -22,10 +22,7 @@ const Footer = () => {
     <footer id="contact-section" className="portfolio-footer section-card animate-slideUp">
       <div className="footer-content">
         <h2 className="section-title">Get in Touch</h2>
-        <p className="footer-subtitle">
-          Have an interesting project, job opportunity, or just want to chat? 
-          Feel free to reach out to me through any of the channels below!
-        </p>
+      
 
         <div className="footer-contact-links">
           {links.email && links.email !== "#" && (
@@ -93,9 +90,6 @@ const Footer = () => {
       </div>
 
       <div className="footer-bottom">
-        <p className="copyright">
-          &copy; {new Date().getFullYear()} Kartheeswaran. Built with React &amp; IoT passion.
-        </p>
         <button 
           onClick={handleBackToTop} 
           className="back-to-top-btn" 
