@@ -231,6 +231,9 @@
   max-width: 500px;
   height: auto;
   display: block;
+  position: relative;
+  top: -100px;
+  left: 50px;
 }
 
 /* ANIMATIONS */
@@ -300,6 +303,8 @@
   .hero-img {
     width: 220px;
     margin: 0 auto;
+    top: 0;
+    left: 0;
   }
 }
 
