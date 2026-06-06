@@ -424,34 +424,37 @@ const AdminPanel = () => {
                             </div>
 
                             {/* Image Grid */}
-                            {(editItem.images && editItem.images.length > 0) && (
+                            {(editItem.images && editItem.images.some(img => img && img.trim() !== '')) && (
                               <div className="image-grid">
-                                {editItem.images.map((img, i) => (
-                                  <div key={i} className="image-item group">
-                                    <img src={img} alt={`Gallery ${i}`} />
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        const newImages = editItem.images.filter((_, idx) => idx !== i);
-                                        setEditItem({ ...editItem, images: newImages });
-                                      }}
-                                      className="image-delete-btn"
-                                      title="Remove image"
-                                    >
-                                      <FaTrash size={12} />
-                                    </button>
-                                    {uploadingStatus[i] !== undefined && (
-                                      <div className="upload-overlay">
-                                        <FaSpinner className="animate-spin text-indigo-600 mb-2" />
-                                        <div className="px-2 w-full">
-                                          <div className="progress-pill">
-                                            <div className="progress-fill" style={{ width: `${uploadingStatus[i]}%` }}></div>
+                                {editItem.images.map((img, i) => {
+                                  if (!img || img.trim() === '') return null;
+                                  return (
+                                    <div key={i} className="image-item group">
+                                      <img src={img} alt={`Gallery ${i}`} />
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const newImages = editItem.images.filter((_, idx) => idx !== i);
+                                          setEditItem({ ...editItem, images: newImages });
+                                        }}
+                                        className="image-delete-btn"
+                                        title="Remove image"
+                                      >
+                                        <FaTrash size={12} />
+                                      </button>
+                                      {uploadingStatus[i] !== undefined && (
+                                        <div className="upload-overlay">
+                                          <FaSpinner className="animate-spin text-indigo-600 mb-2" />
+                                          <div className="px-2 w-full">
+                                            <div className="progress-pill">
+                                              <div className="progress-fill" style={{ width: `${uploadingStatus[i]}%` }}></div>
+                                            </div>
                                           </div>
                                         </div>
-                                      </div>
-                                    )}
-                                  </div>
-                                ))}
+                                      )}
+                                    </div>
+                                  );
+                                })}
                               </div>
                             )}
 
@@ -468,9 +471,9 @@ const AdminPanel = () => {
                                 <FaLink className="text-xs" /> Add Manual URL
                               </button>
 
-                              {editItem.images && editItem.images.some(url => url.startsWith('http')) && (
+                              {editItem.images && editItem.images.some(url => typeof url === 'string' && !url.startsWith('data:')) && (
                                 <div className="space-y-2">
-                                  {editItem.images.map((img, i) => img.startsWith('http') ? (
+                                  {editItem.images.map((img, i) => typeof img === 'string' && !img.startsWith('data:') ? (
                                     <div key={i} className="flex gap-2 animate-fadeIn">
                                       <input
                                         type="text"
