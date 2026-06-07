@@ -3,7 +3,7 @@ import { getAnalytics, isSupported } from "firebase/analytics";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
-
+//config
 const firebaseConfig = {
   apiKey: "AIzaSyCFZSNjMj8j82UiPN2UfmYX0BxgHpnDeUo",
   authDomain: "portfoilo-2feb4.firebaseapp.com",
