@@ -32,6 +32,7 @@ function getFriendlyError(error) {
 const DEFAULT_DATA = {
     projects: [],
     technicalExplorations: [],
+    achievements: [],
     skills: [],
     roles: [],
     headlines: [],
@@ -119,6 +120,32 @@ export const DataProvider = ({ children }) => {
         }
     };
 
+    const updateSection = async (sectionKey, sectionData) => {
+        const [collectionName, documentId] = PORTFOLIO_DOC;
+        const portfolioRef = doc(db, collectionName, documentId);
+
+        try {
+            await setDoc(
+                portfolioRef,
+                {
+                    [sectionKey]: sectionData,
+                    updatedAt: serverTimestamp(),
+                },
+                { merge: true }
+            );
+
+            const nextData = { ...data, [sectionKey]: sectionData };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(nextData));
+            setError(null);
+            return { success: true };
+        } catch (error) {
+            console.error('FULL FIRESTORE ERROR:', error);
+            const message = getFriendlyError(error);
+            setError(message);
+            return { success: false, error: message };
+        }
+    };
+
     const login = async (email, password) => {
         try {
             await signInWithEmailAndPassword(auth, email, password);
@@ -138,7 +165,7 @@ export const DataProvider = ({ children }) => {
 
     return (
         <DataContext.Provider
-            value={{ data, loading, error, updateData, isAuthenticated, login, logout, authUser }}
+            value={{ data, loading, error, updateData, updateSection, isAuthenticated, login, logout, authUser }}
         >
             {children}
         </DataContext.Provider>

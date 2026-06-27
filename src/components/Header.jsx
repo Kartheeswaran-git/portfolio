@@ -15,6 +15,7 @@ const Header = () => {
     { label: "Home", href: "#home-section" },
     { label: "Projects", href: "#projects-section" },
     { label: "Explorations", href: "#explorations-section" },
+    { label: "Achievements", href: "#achievements-section" },
     { label: "Skills", href: "#skills-section" },
     { label: "Contact", href: "#contact-section" },
   ];
@@ -39,7 +40,7 @@ const Header = () => {
     };
 
     const observer = new IntersectionObserver(handleIntersection, observerOptions);
-    const sectionIds = ["home-section", "projects-section", "explorations-section", "skills-section", "contact-section"];
+    const sectionIds = ["home-section", "projects-section", "explorations-section", "achievements-section", "skills-section", "contact-section"];
     
     const timer = setTimeout(() => {
       sectionIds.forEach((id) => {

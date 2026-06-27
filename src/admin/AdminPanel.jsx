@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useData } from '../contexts/DataContext';
-import { FaPlus, FaEdit, FaTrash, FaSignOutAlt, FaProjectDiagram, FaTools, FaUserTie, FaBars, FaTimes, FaCheckCircle, FaExclamationCircle, FaStar, FaLink, FaFlask, FaUpload, FaSpinner } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaSignOutAlt, FaProjectDiagram, FaTools, FaUserTie, FaBars, FaTimes, FaCheckCircle, FaExclamationCircle, FaStar, FaLink, FaFlask, FaUpload, FaSpinner, FaEye, FaEyeSlash, FaChevronLeft, FaChevronRight, FaTrophy } from 'react-icons/fa';
 import './AdminPanel.css';
 import { normalizeImageUrl } from '../utils/imageLinks';
 import { compressImage } from '../utils/compression';
 
 const SCHEMAS = {
-  projects: ['title', 'abstract', 'description', 'longDescription', 'toolsUsed', 'videoLink', 'images', 'tags', 'github', 'demo'],
-  technicalExplorations: ['title', 'abstract', 'description', 'longDescription', 'toolsUsed', 'videoLink', 'images', 'tags', 'github', 'demo'],
+  projects: ['title', 'abstract', 'description', 'longDescription', 'toolsUsed', 'videoLink', 'images', 'tags', 'github', 'demo', 'priority'],
+  technicalExplorations: ['title', 'abstract', 'description', 'longDescription', 'toolsUsed', 'videoLink', 'images', 'tags', 'github', 'demo', 'priority'],
+  achievements: ['title', 'description', 'images', 'priority'],
   skills: ['name', 'level', 'category'],
   roles: ['title', 'company', 'duration', 'description'],
   headlines: ['text'],
@@ -17,6 +18,7 @@ const SCHEMAS = {
 const SECTION_LABELS = {
   projects: { plural: 'Projects', singular: 'Project' },
   technicalExplorations: { plural: 'Technical Explorations', singular: 'Technical Exploration' },
+  achievements: { plural: 'Achievements', singular: 'Achievement' },
   skills: { plural: 'Skills', singular: 'Skill' },
   roles: { plural: 'Work History', singular: 'Role' },
   headlines: { plural: 'Profile Headlines', singular: 'Headline' },
@@ -26,6 +28,7 @@ const SECTION_LABELS = {
 const SECTION_ICONS = {
   projects: FaProjectDiagram,
   technicalExplorations: FaFlask,
+  achievements: FaTrophy,
   skills: FaTools,
   roles: FaUserTie,
   headlines: FaStar,
@@ -33,7 +36,7 @@ const SECTION_ICONS = {
 };
 
 const AdminPanel = () => {
-  const { data, loading, updateData, login, isAuthenticated, logout, authUser, error: dataError } = useData();
+  const { data, loading, updateData, updateSection, login, isAuthenticated, logout, authUser, error: dataError } = useData();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -92,23 +95,22 @@ const AdminPanel = () => {
     e.preventDefault();
     setIsSaving(true);
     const section = activeTab;
-    let newData = { ...data };
-
     try {
+      let updatedSectionData;
       if (section === 'links') {
          // Links is just a single object now, not an array
-         newData[section] = { ...editItem };
+         updatedSectionData = { ...editItem };
       }
       else if (isAdding) {
         const newItem = { ...editItem, id: Date.now().toString() };
-        newData[section] = Array.isArray(newData[section]) ? [...newData[section], newItem] : [newItem];
+        updatedSectionData = Array.isArray(data[section]) ? [...data[section], newItem] : [newItem];
       } else {
-        newData[section] = newData[section].map((item, index) =>
+        updatedSectionData = data[section].map((item, index) =>
           index === editIndex ? { ...editItem } : item
         );
       }
 
-      const result = await updateData(newData);
+      const result = await updateSection(section, updatedSectionData);
       if (result.success) {
         showNotification('success', `${SECTION_LABELS[activeTab]?.singular || 'Item'} saved successfully!`);
         setEditItem(null);
@@ -127,14 +129,27 @@ const AdminPanel = () => {
     if (!window.confirm('Delete this item permanently?')) return;
     
     const section = activeTab;
-    let newData = { ...data };
-    newData[section] = newData[section].filter(item => item.id !== id);
+    const updatedSectionData = data[section].filter(item => item.id !== id);
     
-    const result = await updateData(newData);
+    const result = await updateSection(section, updatedSectionData);
     if (result.success) {
       showNotification('success', 'Item deleted');
     } else {
       showNotification('error', 'Delete failed');
+    }
+  };
+
+  const handleToggleVisibility = async (id, isHidden) => {
+    const section = activeTab;
+    const updatedSectionData = data[section].map(item => 
+      item.id === id ? { ...item, isHidden: !isHidden } : item
+    );
+    
+    const result = await updateSection(section, updatedSectionData);
+    if (result.success) {
+      showNotification('success', `Item ${!isHidden ? 'hidden' : 'visible'}`);
+    } else {
+      showNotification('error', 'Update failed');
     }
   };
 
@@ -251,6 +266,7 @@ const AdminPanel = () => {
   const navItems = [
     { id: 'projects', label: 'Projects', icon: FaProjectDiagram },
     { id: 'technicalExplorations', label: 'Technical Explorations', icon: FaFlask },
+    { id: 'achievements', label: 'Achievements', icon: FaTrophy },
     { id: 'skills', label: 'Skills', icon: FaTools },
     { id: 'roles', label: 'Work History', icon: FaUserTie },
     { id: 'headlines', label: 'Profile Headlines', icon: FaStar },
@@ -442,6 +458,37 @@ const AdminPanel = () => {
                                       >
                                         <FaTrash size={12} />
                                       </button>
+                                      
+                                      {/* Reorder Buttons */}
+                                      {i > 0 && (
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            const newImages = [...editItem.images];
+                                            [newImages[i - 1], newImages[i]] = [newImages[i], newImages[i - 1]];
+                                            setEditItem({ ...editItem, images: newImages });
+                                          }}
+                                          className="image-action-btn image-reorder-left"
+                                          title="Move Left"
+                                        >
+                                          <FaChevronLeft size={10} />
+                                        </button>
+                                      )}
+                                      
+                                      {i < editItem.images.length - 1 && (
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            const newImages = [...editItem.images];
+                                            [newImages[i], newImages[i + 1]] = [newImages[i + 1], newImages[i]];
+                                            setEditItem({ ...editItem, images: newImages });
+                                          }}
+                                          className="image-action-btn image-reorder-right"
+                                          title="Move Right"
+                                        >
+                                          <FaChevronRight size={10} />
+                                        </button>
+                                      )}
                                       {uploadingStatus[i] !== undefined && (
                                         <div className="upload-overlay">
                                           <FaSpinner className="animate-spin text-indigo-600 mb-2" />
@@ -541,8 +588,14 @@ const AdminPanel = () => {
                     <button
                       type="submit"
                       disabled={isSaving}
-                      className="px-10 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                      className="px-10 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
+                      {isSaving && (
+                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                      )}
                       {isSaving ? 'Saving Changes...' : 'Save Item'}
                     </button>
                   </div>
@@ -562,6 +615,15 @@ const AdminPanel = () => {
                         {React.createElement(SECTION_ICONS[activeTab] || FaUserTie)}
                       </div>
                       <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {(activeTab === 'projects' || activeTab === 'technicalExplorations' || activeTab === 'achievements') && (
+                          <button
+                            onClick={() => handleToggleVisibility(item.id, item.isHidden)}
+                            className="p-2 bg-slate-50 text-slate-600 rounded-lg hover:bg-slate-200 hover:text-slate-800"
+                            title={item.isHidden ? "Show Item in Portfolio" : "Hide Item from Portfolio"}
+                          >
+                            {item.isHidden ? <FaEyeSlash /> : <FaEye />}
+                          </button>
+                        )}
                         <button
                           onClick={() => { setEditItem(item); setEditIndex(index); setIsAdding(false); }}
                           className="p-2 bg-slate-50 text-slate-600 rounded-lg hover:bg-indigo-50 hover:text-indigo-600"
@@ -588,11 +650,23 @@ const AdminPanel = () => {
                       <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
                         ID: {item.id ? item.id.toString().slice(-4) : 'NEW'}
                       </span>
-                      {item.level && (
-                        <span className="px-2 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-black rounded uppercase">
-                          {item.level}
-                        </span>
-                      )}
+                      <div className="flex gap-2">
+                        {item.isHidden && (
+                          <span className="px-2 py-1 bg-slate-100 text-slate-500 text-[10px] font-black rounded uppercase">
+                            Hidden
+                          </span>
+                        )}
+                        {item.level && (
+                          <span className="px-2 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-black rounded uppercase">
+                            {item.level}
+                          </span>
+                        )}
+                        {item.priority && (
+                          <span className="px-2 py-1 bg-orange-50 text-orange-600 text-[10px] font-black rounded uppercase">
+                            Priority: {item.priority}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>

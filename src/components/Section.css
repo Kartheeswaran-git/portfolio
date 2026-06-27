@@ -232,7 +232,7 @@
   height: auto;
   display: block;
   position: relative;
-  top: -100px;
+  margin-top: -100px;
   left: 50px;
 }
 
@@ -567,7 +567,7 @@
 }
 
 .modal-close:hover {
-  transform: rotate(180deg) scale(1.1);
+  transform: translateY(-2px) scale(1.05);
   background: #ffffff;
   color: #ef4444;
   box-shadow: 0 8px 20px rgba(239, 68, 68, 0.2);
@@ -597,6 +597,7 @@
   position: absolute;
   inset: 0;
   background: linear-gradient(to bottom, transparent 40%, rgba(0, 0, 0, 0.6) 100%);
+  pointer-events: none;
 }
 
 .modal-nav-btn {
@@ -1266,3 +1267,231 @@ video.video-player {
   }
 }
 
+/* FULLSCREEN IMAGE OVERLAY */
+.fullscreen-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.92);
+  backdrop-filter: blur(8px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-out;
+  animation: modalFadeIn 0.3s ease;
+}
+
+.fullscreen-close {
+  position: absolute;
+  top: 2rem;
+  right: 2rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: white;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  z-index: 2010;
+}
+
+.fullscreen-close:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.1);
+}
+
+.fullscreen-img {
+  max-width: 95vw;
+  max-height: 95vh;
+  object-fit: contain;
+  cursor: default;
+  border-radius: 4px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  animation: modalScaleUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ==================== HEATMAPS IN SKILLS ==================== */
+.heatmap-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.heatmap-card-simple {
+  display: block;
+  background: #fafafa;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 0;
+  overflow: hidden;
+  padding: 1.5rem;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  text-decoration: none;
+}
+
+.heatmap-card-simple:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  border-color: #ff2c5a;
+}
+
+.heatmap-img-simple {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.leetcode-svg-container svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.heatmap-label {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.8rem;
+  color: #1e293b;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+/* GitHub Stats Row (4x1 Grid matching Technical Skills) */
+.gh-stats-row {
+  width: 100%;
+  margin-top: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 0.75rem;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+
+.gh-stat-card-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.85rem 1rem;
+  background: #f9fafb;
+  border: 1px solid #eef2f7;
+  transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.gh-stat-card-item:hover {
+  border-color: #ff2c5a;
+  transform: translateY(-3px);
+  background: #ffffff;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+}
+
+.gh-stat-value {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #111827;
+}
+
+.gh-stat-label {
+  font-size: 0.7rem;
+  color: #dc2626;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .gh-stats-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .gh-stats-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Recent Pushes (Technical Skills List style) */
+.gh-pushes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  margin-bottom: 1.5rem;
+  width: 100%;
+}
+
+.gh-push-item {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.85rem 1rem;
+  background: #f9fafb;
+  border: 1px solid #eef2f7;
+  transition: border-color 0.25s ease, transform 0.25s ease;
+}
+
+.gh-push-item:hover {
+  border-color: #ff2c5a;
+  transform: translateX(4px);
+}
+
+.gh-push-icon {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: #dc2626;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  transition: background 0.25s ease;
+}
+
+.gh-push-item:hover .gh-push-icon {
+  background: #111827;
+}
+
+.gh-push-content {
+  min-width: 0;
+  text-align: left;
+}
+
+.gh-push-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gh-push-meta {
+  margin-top: 0.15rem;
+  font-size: 0.82rem;
+  color: #6b7280;
+}
+
+@media (max-width: 768px) {
+  .heatmap-card-simple {
+    padding: 1rem;
+  }
+  .heatmap-section {
+    grid-template-columns: 1fr;
+  }
+}

@@ -185,6 +185,51 @@ input:focus, textarea:focus {
   transform: scale(1.1);
 }
 
+.image-action-btn {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.95);
+  color: #475569;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  border: 1px solid rgba(0,0,0,0.05);
+  cursor: pointer;
+  z-index: 10;
+}
+
+.image-item:hover .image-action-btn {
+  opacity: 1;
+}
+
+.image-action-btn:hover {
+  background: var(--primary);
+  color: white;
+  transform: scale(1.1);
+}
+
+.image-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.image-reorder-left {
+  bottom: 8px;
+  left: 8px;
+}
+
+.image-reorder-right {
+  bottom: 8px;
+  right: 8px;
+}
+
 .upload-overlay {
   position: absolute;
   inset: 0;

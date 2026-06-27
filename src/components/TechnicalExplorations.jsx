@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import usePortfolioData from "../hooks/usePortfolioData";
 import {
   FaGithub,
@@ -20,12 +20,47 @@ const TechnicalExplorations = () => {
 
   const [activeExploration, setActiveExploration] = useState(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [isFullScreen, setIsFullScreen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!activeExploration) return;
+      
+      const displayImages = activeExploration.images && activeExploration.images.length > 0
+        ? activeExploration.images
+        : activeExploration.image
+          ? [activeExploration.image]
+          : [];
+
+      if (displayImages.length <= 1) return;
+
+      if (e.key === 'ArrowLeft') {
+        setSelectedImageIndex((prev) => prev === 0 ? displayImages.length - 1 : prev - 1);
+      } else if (e.key === 'ArrowRight') {
+        setSelectedImageIndex((prev) => prev === displayImages.length - 1 ? 0 : prev + 1);
+      } else if (e.key === 'Escape') {
+        setIsFullScreen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeExploration]);
+
   const totalPages = Math.ceil((technicalExplorations?.length || 0) / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentExplorations = technicalExplorations?.slice(startIndex, startIndex + itemsPerPage) || [];
+  
+  const sortedExplorations = technicalExplorations ? [...technicalExplorations]
+    .filter(exp => !exp.isHidden)
+    .sort((a, b) => {
+    const pA = a.priority !== undefined && a.priority !== '' ? Number(a.priority) : 9999;
+    const pB = b.priority !== undefined && b.priority !== '' ? Number(b.priority) : 9999;
+    return pA - pB;
+  }) : [];
+  
+  const currentExplorations = sortedExplorations.slice(startIndex, startIndex + itemsPerPage);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -63,9 +98,10 @@ const TechnicalExplorations = () => {
 
             return (
               <div
-                className="project-card-v2 animate-slideUp"
+                className="project-card-v2 animate-slideUp cursor-pointer"
                 key={exploration.id || index}
                 style={{ animationDelay: `${index * 0.15}s` }}
+                onClick={() => handleOpenExploration(exploration)}
               >
                 <div className="card-img-wrapper">
                   {displayImages.length > 0 && (
@@ -157,7 +193,8 @@ const TechnicalExplorations = () => {
                       <img
                         src={displayImages[selectedImageIndex]}
                         alt={activeExploration.title || "Technical Exploration"}
-                        className="modal-hero-img"
+                        className="modal-hero-img cursor-pointer"
+                        onClick={(e) => { e.stopPropagation(); setIsFullScreen(true); }}
                       />
                       <div className="modal-hero-overlay" />
 
@@ -312,6 +349,33 @@ const TechnicalExplorations = () => {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* FULLSCREEN IMAGE OVERLAY */}
+      {isFullScreen && activeExploration && (
+        <div className="fullscreen-overlay" onClick={() => setIsFullScreen(false)}>
+          <button className="fullscreen-close" onClick={(e) => { e.stopPropagation(); setIsFullScreen(false); }}>
+            ✕
+          </button>
+          {(() => {
+            const displayImages = normalizeImageList(
+              activeExploration.images && activeExploration.images.length > 0
+                ? activeExploration.images
+                : activeExploration.image
+                  ? [activeExploration.image]
+                  : []
+            );
+            if (displayImages.length === 0) return null;
+            return (
+              <img 
+                src={displayImages[selectedImageIndex]} 
+                alt="Full screen view" 
+                className="fullscreen-img" 
+                onClick={(e) => e.stopPropagation()} 
+              />
+            );
+          })()}
         </div>
       )}
     </>
