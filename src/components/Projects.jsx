@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import usePortfolioData from "../hooks/usePortfolioData";
 import { FaGithub, FaExternalLinkAlt, FaArrowRight, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import "./Section.css";
@@ -15,7 +15,9 @@ const Projects = () => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 6;
+  const [itemsPerPage, setItemsPerPage] = useState(3);
+  const [showAll, setShowAll] = useState(false);
+  const containerRef = useRef(null);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -42,9 +44,21 @@ const Projects = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [activeProject]);
 
-  const totalPages = Math.ceil((projects?.length || 0) / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  
+  useEffect(() => {
+    const updateItemsPerPage = () => {
+      if (window.innerWidth <= 650) {
+        setItemsPerPage(1);
+      } else if (window.innerWidth <= 1100) {
+        setItemsPerPage(2);
+      } else {
+        setItemsPerPage(3);
+      }
+    };
+    updateItemsPerPage();
+    window.addEventListener('resize', updateItemsPerPage);
+    return () => window.removeEventListener('resize', updateItemsPerPage);
+  }, []);
+
   const sortedProjects = projects ? [...projects]
     .filter(p => !p.isHidden)
     .sort((a, b) => {
@@ -52,12 +66,83 @@ const Projects = () => {
     const pB = b.priority !== undefined && b.priority !== '' ? Number(b.priority) : 9999;
     return pA - pB;
   }) : [];
-  
-  const currentProjects = sortedProjects.slice(startIndex, startIndex + itemsPerPage);
+
+  const totalPages = Math.ceil((sortedProjects?.length || 0) / itemsPerPage);
+
+  const handleScroll = () => {
+    if (!containerRef.current) return;
+    const scrollLeft = containerRef.current.scrollLeft;
+    const clientWidth = containerRef.current.clientWidth;
+    if (clientWidth > 0) {
+      const newPage = Math.round(scrollLeft / clientWidth) + 1;
+      if (newPage !== currentPage) {
+        setCurrentPage(newPage);
+      }
+    }
+  };
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
-    // Scroll to the top of the projects section when page changes
+    if (containerRef.current) {
+      containerRef.current.scrollTo({
+        left: (page - 1) * containerRef.current.clientWidth,
+        behavior: "smooth"
+      });
+    }
+  };
+
+  const handleToggleShowAll = () => {
+    if (!containerRef.current) {
+      setShowAll(!showAll);
+      return;
+    }
+
+    const container = containerRef.current;
+    
+    // 1. Get current height
+    const startHeight = container.offsetHeight;
+    
+    // 2. Temporarily lock the height style
+    container.style.height = `${startHeight}px`;
+    container.style.transition = 'none';
+    container.style.overflow = 'hidden';
+
+    // 3. Toggle the state
+    setShowAll((prev) => {
+      const nextShowAll = !prev;
+      
+      // 4. In the next microtask (after React updates the DOM classes), animate the height
+      setTimeout(() => {
+        // Measure target height
+        container.style.height = '';
+        const endHeight = container.offsetHeight;
+        
+        // Put it back to start height to begin transition
+        container.style.height = `${startHeight}px`;
+        
+        // eslint-disable-next-line no-unused-expressions
+        container.offsetHeight; 
+        
+        // Animate to end height
+        container.style.transition = 'height 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
+        container.style.height = `${endHeight}px`;
+        
+        // Clean up inline styles once transition completes
+        const cleanup = (e) => {
+          if (e.propertyName === 'height') {
+            container.style.height = '';
+            container.style.transition = '';
+            container.style.overflow = '';
+            container.removeEventListener('transitionend', cleanup);
+          }
+        };
+        container.addEventListener('transitionend', cleanup);
+      }, 0);
+      
+      return nextShowAll;
+    });
+
+    // Scroll back to top of projects section when toggled
     const section = document.getElementById("projects-section");
     if (section) {
       section.scrollIntoView({ behavior: "smooth" });
@@ -81,73 +166,96 @@ const Projects = () => {
       <section id="projects-section" className="section-card animate-slideUp">
         <h2 className="section-title">Projects</h2>
 
-        <div className="projects-showroom">
-          {currentProjects.map((project, index) => {
-            const displayImages = normalizeImageList(
-              project.images && project.images.length > 0
-                ? project.images
-                : project.image
-                  ? [project.image]
-                  : []
-            );
-            return (
-              <div 
-                className="project-card-v2 animate-slideUp cursor-pointer" 
-                key={project.id || index}
-                style={{ animationDelay: `${index * 0.15}s` }}
-                onClick={() => handleOpenProject(project)}
-              >
-                <div className="card-img-wrapper">
-                  {displayImages.length > 0 && (
-                    <img
-                      src={displayImages[0]}
-                      alt={project.title || "Project"}
-                      className="card-img"
-                    />
-                  )}
-                  <div className="card-overlay" />
-                </div>
 
-                <div className="card-content">
-                  <div className="flex justify-between items-start">
-                    <h3 className="card-title">{project.title || "Untitled Project"}</h3>
-                  </div>
-                  
-                  <p className="card-description">
-                    {project.abstract || project.description || "No description available."}
-                  </p>
-
-                  <div className="card-footer">
-                    <button
-                      className="card-btn"
-                      onClick={() => handleOpenProject(project)}
-                    >
-                      View Details <FaArrowRight size={12} />
-                    </button>
-                    {hasContent(project.demo) && (
-                      <span className="card-badge">Featured</span>
+        <div className="projects-carousel-wrapper">
+          <div 
+            ref={containerRef}
+            onScroll={handleScroll}
+            className={showAll ? "projects-showroom animate-fadeIn" : "projects-showroom-scrollable"}
+          >
+            {sortedProjects.map((project, index) => {
+              const displayImages = normalizeImageList(
+                project.images && project.images.length > 0
+                  ? project.images
+                  : project.image
+                    ? [project.image]
+                    : []
+              );
+              return (
+                <div 
+                  className="project-card-v2 animate-slideUp cursor-pointer" 
+                  key={project.id || index}
+                  style={{ animationDelay: `${index * 0.05}s` }}
+                  onClick={() => handleOpenProject(project)}
+                >
+                  <div className="card-img-wrapper">
+                    {displayImages.length > 0 && (
+                      <img
+                        src={displayImages[0]}
+                        alt={project.title || "Project"}
+                        className="card-img"
+                      />
                     )}
+                    <div className="card-overlay" />
+                  </div>
+
+                  <div className="card-content">
+                    <div className="flex justify-between items-start">
+                      <h3 className="card-title">{project.title || "Untitled Project"}</h3>
+                    </div>
+                    
+                    <p className="card-description">
+                      {project.abstract || project.description || "No description available."}
+                    </p>
+
+                    <div className="card-footer">
+                      <button
+                        className="card-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenProject(project);
+                        }}
+                      >
+                        View Details <FaArrowRight size={12} />
+                      </button>
+                      {hasContent(project.demo) && (
+                        <span className="card-badge">Featured</span>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
 
-        {/* PAGINATION UI */}
-        {totalPages > 1 && (
-          <div className="pagination-container">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <button
-                key={page}
-                className={`page-box ${currentPage === page ? "active" : ""}`}
-                onClick={() => handlePageChange(page)}
-              >
-                {page}
-              </button>
-            ))}
+        {/* PROJECTS FOOTER CONTROLS */}
+        {sortedProjects.length > 3 && (
+          <div className="projects-controls-container">
+            {/* Centered Pagination Dots */}
+            {!showAll && totalPages > 1 && (
+              <div className="pagination-container animate-fadeIn">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    className={`page-point ${currentPage === page ? "active" : ""}`}
+                    onClick={() => handlePageChange(page)}
+                    aria-label={`Go to page ${page}`}
+                  />
+                ))}
+              </div>
+            )}
+            
+            {/* Right-aligned Toggle Button */}
+            <button 
+              className="projects-toggle-btn"
+              onClick={handleToggleShowAll}
+            >
+              {showAll ? "Show Less" : "Show All"}
+            </button>
           </div>
         )}
+
       </section>
 
       {/* MODAL V2 */}

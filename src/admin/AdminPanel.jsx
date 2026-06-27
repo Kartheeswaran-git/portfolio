@@ -36,7 +36,7 @@ const SECTION_ICONS = {
 };
 
 const AdminPanel = () => {
-  const { data, loading, updateData, updateSection, login, isAuthenticated, logout, authUser, error: dataError } = useData();
+  const { data, loading, updateSection, login, isAuthenticated, logout, authUser, error: dataError } = useData();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

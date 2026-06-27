@@ -6,9 +6,7 @@ const Footer = () => {
   const { data } = usePortfolioData();
   const { links = {} } = data || {};
 
-  const getLinkUrl = (key) => {
-    return links[key] || "#";
-  };
+
 
   const handleBackToTop = (e) => {
     e.preventDefault();
